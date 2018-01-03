@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 
 namespace RailwayTicketSearch.Models
 {
-    public class TicketSearchItem
+    public class TrainSearchItem
     {
         [JsonProperty("allow_booking")]
         public bool AllowBooking { get; set; }

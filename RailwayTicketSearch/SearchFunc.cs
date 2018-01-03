@@ -5,9 +5,11 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Host;
 using Twilio;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using RailwayTicketSearch.Extensions;
 using RailwayTicketSearch.Infrastructure;
+using RailwayTicketSearch.Models;
 
 namespace RailwayTicketSearch
 {
@@ -26,38 +28,41 @@ namespace RailwayTicketSearch
             if (string.IsNullOrEmpty(response))
             {
                 return null;
-            }            
-
-            // Parse response json string to list of ticket search items
-            var ticketSearchItems = Convertes.ConvertStringToTicketSearchItems(response);           
+            }                        
+            var trains = Convertes.ToTrainSearchItems(response);           
             
-            // Apply filters
-            var maxTravelTime = double.Parse(config.MaxTravelTime);
-            var carrigeTypes = config.Types;            
-            var filteredTicketItems = ticketSearchItems.ApplyFilters(maxTravelTime, carrigeTypes);            
-            if (filteredTicketItems.Count < 5)
+            // Apply filters                        
+            var filteredTrains = trains
+                .Where(item => Convertes.TravelTimeToHours(item.TravelTime) <= config.MaxTravelTime)
+                .Where(item => item.AvailiableCarrigeTypes.Any(ct => config.Types.Contains(ct.Letter)))                
+                .OrderBy(item => Convertes.TravelTimeToHours(item.TravelTime))
+                .ToList();            
+
+            // Generate summary                    
+            var summary = CreateSummary(filteredTrains);
+            log.Info($"Ticket found short info: {summary}");
+
+            // Send email            
+            if (config.EnableEmailNotifications)
             {
-                return null;
+                var report = CreateReport(filteredTrains);
+                var smtpClient = new SmtpUserClient();
+                await smtpClient.SendEmail("Tickets found", report);
             }
 
-            // Group by carrige type        
-            var grouppedCarrigeTypes = filteredTicketItems
-                .SelectMany(fct => fct.AvailiableCarrigeTypes)
-                .GroupByCarrigeType();
-            var types = new List<KeyValuePair<string, int>>();            
-            types.AddRange(grouppedCarrigeTypes.Select(group => new KeyValuePair<string, int>(group.Type, group.Total)));
+            // Send SMS
+            if (config.EnableSmsNotifications)
+            {                
+                var message = new SMSMessage
+                {
+                    Body = summary,
+                    From = ConfigurationManager.AppSettings["TwilioFrom"],
+                    To = ConfigurationManager.AppSettings["TwilioTo"]
+                };
+                return message;  
+            }
 
-            // Response SMS text
-            var text = $"Total trains={filteredTicketItems.Count};" +
-                       $"Types= {string.Join(",", types.Select(t => $"{t.Key}:{t.Value}"))}";
-            log.Info($"Text to be sent: {text}");
-            var message = new SMSMessage
-            {
-                Body = text,
-                From = ConfigurationManager.AppSettings["TwilioFrom"],
-                To = ConfigurationManager.AppSettings["TwilioTo"]
-            };
-            return message;            
+            return null;          
         }       
 
         private static async Task<string> GetAvailiableTrains(AppSettings config)
@@ -76,8 +81,48 @@ namespace RailwayTicketSearch
             };
 
             var client = new HttpUserClient();
-            var result = await client.FormUrlEncodedPostAsString("https://booking.uz.gov.ua/purchase/search/", nvc);
+            var result = await client
+                .FormUrlEncodedPostAsString("https://booking.uz.gov.ua/purchase/search/", nvc);
             return result;
+        }
+
+        private static string CreateReport(IReadOnlyCollection<TrainSearchItem> trainSearchItems)
+        {
+            var sb = new StringBuilder();
+            var summary = CreateSummary(trainSearchItems);
+            sb.AppendLine($"Summary: {summary}");
+            sb.AppendLine(new string('-', 80));
+
+            foreach (var train in trainSearchItems)
+            {
+                sb.AppendLine($"Train number: {train.TrainNumber}");
+                sb.AppendLine($"Allow booking: {train.AllowBooking}");
+                sb.AppendLine($"Travel time : {train.TravelTime}");
+                sb.AppendLine($"From: {train.From.StationName} Till: {train.Till.StationName}");
+                sb.AppendLine($"Arrival to start: {train.From.ArrivalDateTime}");
+                sb.AppendLine($"Arrival to finish: {train.Till.ArrivalDateTime}");
+
+                var places = string.Join(",",
+                    train.AvailiableCarrigeTypes.Select(ct => $"{ct.Title}={ct.Places}"));
+                sb.AppendLine($"Availiable places: {places}");
+                sb.AppendLine(new string('-', 80));
+            }
+            return sb.ToString();
+        }
+
+        private static string CreateSummary(IReadOnlyCollection<TrainSearchItem> trainSearchItems)
+        {
+            var allCarrigeTypes = trainSearchItems
+                .SelectMany(fct => fct.AvailiableCarrigeTypes)
+                .GroupByCarrigeType();
+
+            var types = new List<KeyValuePair<string, int>>();
+            types.AddRange(allCarrigeTypes.Select(group => new KeyValuePair<string, int>(group.Type, group.Total)));
+
+            var summary = $"Total trains={trainSearchItems.Count};" +
+                          $"Types= {string.Join(",", types.Select(t => $"{t.Key}:{t.Value}"))}";
+
+            return summary;
         }
     }
 }

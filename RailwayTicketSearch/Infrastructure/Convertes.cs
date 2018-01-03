@@ -6,17 +6,17 @@ namespace RailwayTicketSearch.Infrastructure
 {
     public static class Convertes
     {
-        public static double ConvertTravelTimeToHours(string travelTime)
+        public static double TravelTimeToHours(string travelTime)
         {
             var values = travelTime.Split(':');
             var result = double.Parse(values[0]) + double.Parse(values[1]) / 60;
             return result;
         }
 
-        public static List<TicketSearchItem> ConvertStringToTicketSearchItems(string response)
+        public static List<TrainSearchItem> ToTrainSearchItems(string response)
         {
             var jobject = JObject.Parse(response);
-            return jobject["value"]?.ToObject<List<TicketSearchItem>>();
+            return jobject["value"]?.ToObject<List<TrainSearchItem>>();
         }
     }
 }
