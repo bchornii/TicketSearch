@@ -17,7 +17,7 @@ namespace RailwayTicketSearch.Infrastructure
                 EnableSsl = true,
                 DeliveryMethod = SmtpDeliveryMethod.Network,
                 UseDefaultCredentials = false,
-                Credentials = new NetworkCredential("ticketsearchclient@gmail.com", "QAZwsx123")
+                Credentials = new NetworkCredential("ticketsearchclient@gmail.com", "****")
             };
             await smtp.SendMailAsync(new MailMessage(from, to)
             {
