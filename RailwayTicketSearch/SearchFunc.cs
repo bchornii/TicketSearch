@@ -41,7 +41,7 @@ namespace RailwayTicketSearch
             // Generate summary                    
             var summary = CreateSummary(filteredTrains);
             log.Info($"Ticket found short info: {summary}");
-
+             
             // Send email            
             if (config.EnableEmailNotifications)
             {
