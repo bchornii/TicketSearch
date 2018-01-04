@@ -8,8 +8,9 @@ namespace RailwayTicketSearch.Infrastructure
     {
         public async Task SendEmail(string subject, string body)
         {
-            var from = new MailAddress("ticketsearchclient@gmail.com", "Ticket Client");
-            var to = new MailAddress("bogdan.chorniy@gmail.com");
+            var appSettings = new AppSettings().GetAppSettings();
+            var from = new MailAddress(appSettings.EmailFrom, "Ticket Client");
+            var to = new MailAddress(appSettings.EmailTo);
             var smtp = new SmtpClient
             {
                 Host = "smtp.gmail.com",
@@ -17,7 +18,7 @@ namespace RailwayTicketSearch.Infrastructure
                 EnableSsl = true,
                 DeliveryMethod = SmtpDeliveryMethod.Network,
                 UseDefaultCredentials = false,
-                Credentials = new NetworkCredential("ticketsearchclient@gmail.com", "QAZwsx123")
+                Credentials = new NetworkCredential(appSettings.EmailFrom, appSettings.EmailPassword)
             };
             await smtp.SendMailAsync(new MailMessage(from, to)
             {

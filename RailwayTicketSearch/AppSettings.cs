@@ -16,6 +16,9 @@ namespace RailwayTicketSearch
         public string[] Types { get; set; }
         public bool EnableSmsNotifications { get; set; }
         public bool EnableEmailNotifications { get; set; }
+        public string EmailFrom { get; set; }
+        public string EmailPassword { get; set; }
+        public string EmailTo { get; set; }
 
         public AppSettings GetAppSettings()
         {
@@ -32,7 +35,10 @@ namespace RailwayTicketSearch
                 MaxTravelTime = double.Parse(ConfigurationManager.AppSettings["MaxTravelTime"]),
                 Types = ConfigurationManager.AppSettings["Types"]?.Split(','),
                 EnableSmsNotifications = bool.Parse(ConfigurationManager.AppSettings["EnableSmsNotifications"]),
-                EnableEmailNotifications = bool.Parse(ConfigurationManager.AppSettings["EnableEmailNotifications"])
+                EnableEmailNotifications = bool.Parse(ConfigurationManager.AppSettings["EnableEmailNotifications"]),
+                EmailFrom = ConfigurationManager.AppSettings["EmailFrom"],
+                EmailPassword = ConfigurationManager.AppSettings["EmailPassword"],
+                EmailTo = ConfigurationManager.AppSettings["EmailTo"]
             };
         }
     }
