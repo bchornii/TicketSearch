@@ -16,10 +16,10 @@ namespace RailwayTicketSearch
     public static class SearchFunc
     {
         [FunctionName("SearchFunc")]
-        [return: TwilioSms(
-            AccountSidSetting = "TwilioAccountSid",
+        [return: TwilioSms(AccountSidSetting = "TwilioAccountSid",
             AuthTokenSetting = "TwilioAuthToken")]
-        public static async Task<SMSMessage> Run([TimerTrigger("0 */1 * * * *")]TimerInfo myTimer, TraceWriter log)
+        public static async Task<SMSMessage> Run(
+            [TimerTrigger("0 */1 * * * *")]TimerInfo myTimer, TraceWriter log)
         {
             log.Info($"C# Timer trigger function executed at: {DateTime.Now}");       
 
