@@ -7,6 +7,7 @@ using Twilio;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 using RailwayTicketSearch.Extensions;
 using RailwayTicketSearch.Infrastructure;
 using RailwayTicketSearch.Models;
@@ -25,7 +26,8 @@ namespace RailwayTicketSearch
 
             var config = new AppSettings().GetAppSettings();
             var response = await GetAvailiableTrains(config);
-            if (string.IsNullOrEmpty(response))
+            var jobject = JObject.Parse(response);
+            if (string.IsNullOrEmpty(response) || jobject["error"]?.ToObject<int>() == 1 || jobject["data"]["warning"] != null)
             {
                 return null;
             }                        
@@ -69,20 +71,15 @@ namespace RailwayTicketSearch
         {
             var nvc = new List<KeyValuePair<string, string>>
             {
-                new KeyValuePair<string, string>("station_id_from", config.StantionIdFrom),
-                new KeyValuePair<string, string>("station_id_till", config.StantionIdTo),
-                new KeyValuePair<string, string>("station_from", config.StationFrom),
-                new KeyValuePair<string, string>("station_till", config.StationTo),
-                new KeyValuePair<string, string>("date_dep", config.DateDep),
-                new KeyValuePair<string, string>("time_dep", config.TimeDep),
-                new KeyValuePair<string, string>("time_dep_till", ""),
-                new KeyValuePair<string, string>("another_ec", "0"),
-                new KeyValuePair<string, string>("search", "")
+                new KeyValuePair<string, string>("from", config.StantionIdFrom),
+                new KeyValuePair<string, string>("to", config.StantionIdTo),
+                new KeyValuePair<string, string>("date", config.DateDep),
+                new KeyValuePair<string, string>("time", config.TimeDep)                
             };
 
             var client = new HttpUserClient();
             var result = await client
-                .FormUrlEncodedPostAsString("https://booking.uz.gov.ua/purchase/search/", nvc);
+                .FormUrlEncodedPostAsString("https://booking.uz.gov.ua/train_search/", nvc);
             return result;
         }
 

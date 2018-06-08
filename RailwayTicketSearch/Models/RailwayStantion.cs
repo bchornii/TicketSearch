@@ -5,7 +5,10 @@ namespace RailwayTicketSearch.Models
 {
     public class RailwayStantion
     {
-        [JsonProperty("src_date")]
+        [JsonProperty("time")]
+        public DateTime ArrivalTime { get; set; }
+
+        [JsonProperty("srcDate")]
         public DateTime ArrivalDateTime { get; set; }
 
         [JsonProperty("station")]

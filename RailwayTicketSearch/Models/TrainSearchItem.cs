@@ -5,10 +5,10 @@ namespace RailwayTicketSearch.Models
 {
     public class TrainSearchItem
     {
-        [JsonProperty("allow_booking")]
+        [JsonProperty("allowBooking")]
         public bool AllowBooking { get; set; }
 
-        [JsonProperty("allow_roundtrip")]
+        [JsonProperty("allowRoundtrip")]
         public bool AllowRoundtrip { get; set; }
 
         [JsonProperty("num")]
@@ -17,10 +17,10 @@ namespace RailwayTicketSearch.Models
         [JsonProperty("from")]
         public RailwayStantion From { get; set; }
 
-        [JsonProperty("till")]
+        [JsonProperty("to")]
         public RailwayStantion Till { get; set; }
 
-        [JsonProperty("travel_time")]
+        [JsonProperty("travelTime")]
         public string TravelTime { get; set; }
 
         [JsonProperty("types")]

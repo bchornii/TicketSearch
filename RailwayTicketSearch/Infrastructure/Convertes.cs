@@ -16,7 +16,7 @@ namespace RailwayTicketSearch.Infrastructure
         public static List<TrainSearchItem> ToTrainSearchItems(string response)
         {
             var jobject = JObject.Parse(response);
-            return jobject["value"]?.ToObject<List<TrainSearchItem>>();
+            return jobject["data"]["list"]?.ToObject<List<TrainSearchItem>>();
         }
     }
 }
